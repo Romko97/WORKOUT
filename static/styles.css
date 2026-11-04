@@ -91,3 +91,6 @@ dialog input::placeholder{color:#65705f;opacity:1}
 .save-status [data-problem="true"]{color:#9d3827}
 .save-status button{padding:6px 10px;font-size:12px}
 
+
+.history-exercise-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.history-delete{font-size:12px;padding:8px 12px}

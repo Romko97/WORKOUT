@@ -81,6 +81,18 @@ class PersistenceTests(unittest.TestCase):
         seeded.write(updated, 1)
         self.assertEqual(Database(another_path, seed).read()['state']['active']['name'], 'Змінено')
 
+    def test_history_exercise_removal_persists(self):
+        state = example()
+        state['workouts'] = [{**copy.deepcopy(state['active']), 'finished': 5000}]
+        self.database.write(state, 0)
+        edited = self.database.read()['state']
+        edited['workouts'][0]['exercises'].pop(0)
+        self.database.write(edited, 1)
+        reopened = Database(self.path).read()['state']
+        self.assertEqual(reopened['workouts'][0]['exercises'], [])
+        self.assertEqual(reopened['active'], state['active'])
+        self.assertEqual(reopened['custom'], state['custom'])
+
 
 class APITests(unittest.TestCase):
     def setUp(self):

@@ -37,7 +37,60 @@ function saveRoutine(){if(!db.active.exercises.length){toast('Спочатку �
 function routineCard(r){return `<div class="card"><div class="row"><div><span class="tag">${r.exercises.length} вправ</span><h2 style="margin-top:13px">${esc(r.name)}</h2><p class="small">${r.exercises.map(e=>esc(e.name)).join(' · ')}</p></div><button class="subtle" onclick="deleteRoutine('${r.id}')" aria-label="Видалити програму">✕</button></div><button class="primary" onclick="start('${r.id}')">Почати тренування ↗</button></div>`}
 function routines(){return `<div class="hero"><div><div class="eyebrow">Ваш план</div><h1>Програми тренувань.</h1><p>Збережені вправи та підходи для наступного візиту в зал.</p></div><button class="primary" onclick="start()">＋ Створити через тренування</button></div>${db.routines.length?db.routines.map(routineCard).join(''):'<div class="card empty"><h2>Поки що тут чистий аркуш</h2><p>Додайте вправи в тренуванні та натисніть «Зберегти програму».</p></div>'}`}
 function deleteRoutine(id){if(confirm('Видалити цю програму?')){db.routines=db.routines.filter(r=>r.id!==id);save();render()}}
-function history(){return `<div class="eyebrow">Кожне зусилля має значення</div><h1>Ваша історія.</h1><p>Усі збережені тренування, від першого до останнього.</p>${db.workouts.length?[...db.workouts].reverse().map(w=>`<details class="card"><summary style="cursor:pointer"><strong>${esc(w.name)}</strong><span class="muted" style="float:right">${date(w.started)}</span><div class="muted" style="margin-top:10px">${completed(w)} підходів · ${fmt(volume(w))} кг · ${Math.max(1,Math.round((w.finished-w.started)/60000))} хв</div></summary><div style="margin-top:20px">${w.exercises.map(e=>`<div class="list-item"><strong>${esc(e.name)}</strong><p class="small">${e.sets.filter(s=>s.done).map(s=>setSummary(s,e)).join(' · ')||'Немає виконаних підходів'}</p></div>`).join('')}</div></details>`).join(''):'<div class="card empty"><div class="symbol">↗</div><h2>Тут буде ваша історія</h2><p>Завершіть перше тренування, щоб побачити результат.</p><button class="dark" onclick="start()">Почати</button></div>'}`}
+function history() {
+  const workouts = [...db.workouts].reverse();
+  const cards = workouts.map(workout => `
+    <details class="card" data-workout-id="${esc(workout.id)}">
+      <summary style="cursor:pointer">
+        <strong>${esc(workout.name)}</strong>
+        <span class="muted" style="float:right">${date(workout.started)}</span>
+        <div class="muted" style="margin-top:10px">
+          ${completed(workout)} підходів · ${fmt(volume(workout))} кг · ${Math.max(1, Math.round((workout.finished - workout.started) / 60000))} хв
+        </div>
+      </summary>
+      <div style="margin-top:20px">
+        ${workout.exercises.map((exercise, index) => `
+          <div class="list-item">
+            <div class="history-exercise-heading">
+              <strong>${esc(exercise.name)}</strong>
+              <button class="danger history-delete"
+                aria-label="Видалити ${esc(exercise.name)} з тренування ${esc(workout.name)}"
+                onclick="deleteHistoryExercise('${workout.id}', ${index})">Видалити вправу</button>
+            </div>
+            <p class="small">${exercise.sets.filter(set => set.done).map(set => setSummary(set, exercise)).join(' · ') || 'Немає виконаних підходів'}</p>
+          </div>
+        `).join('') || '<p class="muted">У цьому тренуванні немає вправ.</p>'}
+      </div>
+    </details>
+  `).join('');
+
+  return `<div class="eyebrow">Кожне зусилля має значення</div>
+    <h1>Ваша історія.</h1>
+    <p>Розгорніть тренування, щоб переглянути підходи або видалити окрему вправу.</p>
+    ${cards || `<div class="card empty"><div class="symbol">↗</div>
+      <h2>Тут буде ваша історія</h2><p>Завершіть перше тренування, щоб побачити результат.</p>
+      <button class="dark" onclick="start()">Почати</button></div>`}`;
+}
+
+function deleteHistoryExercise(workoutId, exerciseIndex) {
+  const workout = db.workouts.find(item => item.id === workoutId);
+  if (!workout || !Number.isInteger(exerciseIndex) || exerciseIndex < 0 || exerciseIndex >= workout.exercises.length) return;
+  const exercise = workout.exercises[exerciseIndex];
+  const message = `Видалити «${exercise.name}» та всі її підходи з тренування «${workout.name}» за ${date(workout.started)}?`;
+  if (!confirm(message)) return;
+
+  workout.exercises.splice(exerciseIndex, 1);
+  if (!save()) {
+    workout.exercises.splice(exerciseIndex, 0, exercise);
+    try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (_) { /* Existing state remains in memory. */ }
+    return;
+  }
+  render();
+  const details = document.querySelector?.(`[data-workout-id="${workout.id}"]`);
+  if (details) details.open = true;
+  toast('Вправу видалено з цього тренування. Статистику оновлено.');
+}
+
 function progressView(){const names=[...new Set(db.workouts.flatMap(w=>w.exercises.filter(e=>e.sets.some(s=>s.done&&s.kg>0)).map(e=>e.name)))];return `<div class="eyebrow">Сила в послідовності</div><h1>Особистий прогрес.</h1><p>Максимальна вага у виконаному підході та обсяг останніх тренувань.</p><div class="card"><h2>Ваші рекорди</h2>${names.length?names.map(n=>{const best=Math.max(...db.workouts.flatMap(w=>w.exercises.filter(e=>e.name===n).flatMap(e=>e.sets.filter(s=>s.done).map(s=>s.kg))));return `<div class="row list-item"><span>${esc(n)}</span><strong>${decimal(best)} кг</strong></div>`}).join(''):'<p>Рекорди з’являться після першого завершеного тренування.</p>'}</div><div class="card"><h2>Обсяг тренувань</h2><p class="small">Сума ваги × повторення для виконаних підходів; вага тіла не враховується.</p>${db.workouts.slice(-8).map(w=>`<div class="list-item"><div class="row small"><span>${date(w.started)} · ${esc(w.name)}</span><strong>${fmt(volume(w))} кг</strong></div><div class="bar" style="margin-top:10px"><i style="width:${volume(w)/Math.max(1,...db.workouts.slice(-8).map(volume))*100}%"></i></div></div>`).join('')||'<p>Ще немає даних.</p>'}</div>`}
 function dataView(){return `<div class="eyebrow">Ваші дані</div><h1>Усе під контролем.</h1><div class="card"><h2>Дані з Hevy</h2><p>Імпортуйте повний файл forma-personal-data.json: тренування, підходи, програми та каталог вправ. Локальні записи зберігаються, повторний імпорт не створює дублікатів.</p><button class="primary" onclick="document.getElementById('hevyImport').click()">↑ Імпортувати всі дані Hevy</button><input id="hevyImport" type="file" hidden style="display:none" accept=".json,application/json" onchange="importHevy(this.files[0]);this.value='' "></div><div class="card"><h2>Резервна копія</h2><p>Завантажте свої тренування та програми у файл. Його можна імпортувати в цьому прототипі в іншому браузері. Це ручне перенесення даних.</p><div class="actions"><button class="primary" onclick="exportData()">↓ Завантажити копію</button><button onclick="document.getElementById('import').click()">↑ Імпортувати копію</button><input hidden id="import" type="file" accept="application/json,.json" onchange="importData(this.files[0]);this.value=''" style="display:none"></div></div><div class="card"><h2>Статус особистої версії</h2><p>Локальний кеш браузера: <strong>${storageOK?'доступне':'помилка — завантажте копію'}</strong>.<br>Дані зберігаються Python-сервером у SQLite на цьому комп’ютері. Статус збереження показано над меню. Синхронізацію з iPhone ще не підключено.</p></div>`}
 function exportData(){const url=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=`forma-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}

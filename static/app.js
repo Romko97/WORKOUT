@@ -40,22 +40,23 @@ function deleteRoutine(id){if(confirm('Видалити цю програму?')
 function history() {
   const workouts = [...db.workouts].reverse();
   const cards = workouts.map(workout => `
-    <details class="card" data-workout-id="${esc(workout.id)}">
+    <details class="card history-day" data-workout-id="${esc(workout.id)}">
       <summary style="cursor:pointer">
         <strong>${esc(workout.name)}</strong>
-        <span class="muted" style="float:right">${date(workout.started)}</span>
+        <span class="muted history-date">${date(workout.started)}</span>
         <div class="muted" style="margin-top:10px">
           ${completed(workout)} підходів · ${fmt(volume(workout))} кг · ${Math.max(1, Math.round((workout.finished - workout.started) / 60000))} хв
         </div>
       </summary>
-      <div style="margin-top:20px">
+      <div class="history-day-toolbar"><span class="muted">${workout.exercises.length} вправ у тренуванні</span><button class="danger history-delete-day" onclick="deleteHistoryWorkout('${workout.id}')">Видалити тренування</button></div>
+      <div class="history-exercise-grid">
         ${workout.exercises.map((exercise, index) => `
-          <div class="list-item">
+          <div class="history-exercise">
             <div class="history-exercise-heading">
               <strong>${esc(exercise.name)}</strong>
               <button class="danger history-delete"
                 aria-label="Видалити ${esc(exercise.name)} з тренування ${esc(workout.name)}"
-                onclick="deleteHistoryExercise('${workout.id}', ${index})">Видалити вправу</button>
+                title="Видалити вправу" onclick="deleteHistoryExercise('${workout.id}', ${index})">×</button>
             </div>
             <p class="small">${exercise.sets.filter(set => set.done).map(set => setSummary(set, exercise)).join(' · ') || 'Немає виконаних підходів'}</p>
           </div>
@@ -66,7 +67,7 @@ function history() {
 
   return `<div class="eyebrow">Кожне зусилля має значення</div>
     <h1>Ваша історія.</h1>
-    <p>Розгорніть тренування, щоб переглянути підходи або видалити окрему вправу.</p>
+    <p>Розгорніть тренування, щоб переглянути підходи, видалити вправу або весь день.</p>
     ${cards || `<div class="card empty"><div class="symbol">↗</div>
       <h2>Тут буде ваша історія</h2><p>Завершіть перше тренування, щоб побачити результат.</p>
       <button class="dark" onclick="start()">Почати</button></div>`}`;
@@ -89,6 +90,25 @@ function deleteHistoryExercise(workoutId, exerciseIndex) {
   const details = document.querySelector?.(`[data-workout-id="${workout.id}"]`);
   if (details) details.open = true;
   toast('Вправу видалено з цього тренування. Статистику оновлено.');
+}
+
+function deleteHistoryWorkout(workoutId) {
+  const index = db.workouts.findIndex(item => item.id === workoutId);
+  if (index < 0) return;
+  const workout = db.workouts[index];
+  if (!confirm(`Видалити тренування «${workout.name}» за ${date(workout.started)} повністю, разом з усіма вправами та підходами?`)) return;
+  const previousDeleted = db.deletedWorkoutIds;
+  db.workouts.splice(index, 1);
+  db.deletedWorkoutIds = [...new Set([...(previousDeleted || []), workout.id])];
+  if (!save()) {
+    db.workouts.splice(index, 0, workout);
+    if (previousDeleted === undefined) delete db.deletedWorkoutIds;
+    else db.deletedWorkoutIds = previousDeleted;
+    try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (_) { /* State restored in memory. */ }
+    return;
+  }
+  render();
+  toast('Тренування видалено з історії. Статистику оновлено.');
 }
 
 function progressView(){const names=[...new Set(db.workouts.flatMap(w=>w.exercises.filter(e=>e.sets.some(s=>s.done&&s.kg>0)).map(e=>e.name)))];return `<div class="eyebrow">Сила в послідовності</div><h1>Особистий прогрес.</h1><p>Максимальна вага у виконаному підході та обсяг останніх тренувань.</p><div class="card"><h2>Ваші рекорди</h2>${names.length?names.map(n=>{const best=Math.max(...db.workouts.flatMap(w=>w.exercises.filter(e=>e.name===n).flatMap(e=>e.sets.filter(s=>s.done).map(s=>s.kg))));return `<div class="row list-item"><span>${esc(n)}</span><strong>${decimal(best)} кг</strong></div>`}).join(''):'<p>Рекорди з’являться після першого завершеного тренування.</p>'}</div><div class="card"><h2>Обсяг тренувань</h2><p class="small">Сума ваги × повторення для виконаних підходів; вага тіла не враховується.</p>${db.workouts.slice(-8).map(w=>`<div class="list-item"><div class="row small"><span>${date(w.started)} · ${esc(w.name)}</span><strong>${fmt(volume(w))} кг</strong></div><div class="bar" style="margin-top:10px"><i style="width:${volume(w)/Math.max(1,...db.workouts.slice(-8).map(volume))*100}%"></i></div></div>`).join('')||'<p>Ще немає даних.</p>'}</div>`}
@@ -127,7 +147,7 @@ function convertHevySnapshot(data){
 function mergeHevyData(data){
  const incoming=convertHevySnapshot(data);
  const merge=(current,added)=>[...new Map([...added,...current].map(x=>[x.id,x])).values()];
- const next={...db,workouts:merge(db.workouts,incoming.workouts).sort((a,b)=>a.started-b.started),routines:merge(db.routines,incoming.routines),exerciseCatalog:merge(db.exerciseCatalog||[],incoming.exerciseCatalog),custom:[...new Set([...db.custom,...incoming.exerciseCatalog.map(e=>e.name)])]};
+ const next={...db,workouts:merge(db.workouts,incoming.workouts).filter(workout=>!(db.deletedWorkoutIds||[]).includes(workout.id)).sort((a,b)=>a.started-b.started),routines:merge(db.routines,incoming.routines),exerciseCatalog:merge(db.exerciseCatalog||[],incoming.exerciseCatalog),custom:[...new Set([...db.custom,...incoming.exerciseCatalog.map(e=>e.name)])]};
  // Commit only after validation and successful persistence; preserve current data on failure.
  localStorage.setItem(KEY,JSON.stringify(next));formaSync.save(next);db=next;storageOK=true;
  return {workouts:incoming.workouts.length,routines:incoming.routines.length};

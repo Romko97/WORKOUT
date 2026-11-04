@@ -93,6 +93,18 @@ class PersistenceTests(unittest.TestCase):
         self.assertEqual(reopened['active'], state['active'])
         self.assertEqual(reopened['custom'], state['custom'])
 
+    def test_whole_workout_deletion_and_marker_persist(self):
+        state = example()
+        state['workouts'] = [{**copy.deepcopy(state['active']), 'finished': 5000}]
+        self.database.write(state, 0)
+        edited = self.database.read()['state']
+        edited['deletedWorkoutIds'] = [edited['workouts'].pop()['id']]
+        self.database.write(edited, 1)
+        reopened = Database(self.path).read()['state']
+        self.assertEqual(reopened['workouts'], [])
+        self.assertEqual(reopened['deletedWorkoutIds'], ['test-workout'])
+        self.assertEqual(reopened['active'], state['active'])
+
 
 class APITests(unittest.TestCase):
     def setUp(self):

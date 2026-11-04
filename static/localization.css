@@ -1,0 +1,17 @@
+.exercise-translation { font-weight: 400; color: #59684f; line-height: 1.5; }
+.exercise-head .exercise-translation { font-size: .85em; }
+.weight-value { display: inline-flex; align-items: baseline; gap: 5px; flex-wrap: wrap; }
+.weight-lb { font-weight: 400; font-size: .85em; color: #64705d; white-space: nowrap; }
+.weight-kg { white-space: nowrap; }
+.weight-input { display: flex; flex-direction: column; align-items: stretch; gap: 4px; min-width: 0; text-align: center; }
+.weight-input .weight-lb { font-size: 11px; }
+.record-row { flex-wrap: wrap; align-items: baseline; }
+.record-name { flex: 1 1 270px; min-width: 0; line-height: 1.6; overflow-wrap: anywhere; }
+.record-values { flex: 0 0 auto; margin-left: auto; text-align: right; }
+.record-values .weight-value { justify-content: flex-end; }
+.history-exercise .weight-lb { font-size: 1em; }
+@media(max-width:600px) {
+  .record-name { flex-basis: 100%; }
+  .record-values { margin-left: 0; text-align: left; }
+  .record-values .weight-value { justify-content: flex-start; }
+}

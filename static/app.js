@@ -46,10 +46,10 @@ function history() {
           <span class="history-summary-title"><span class="history-toggle" aria-hidden="true">▸</span><strong>${esc(workout.name)}</strong></span>
           <span class="muted history-summary-stats">${completed(workout)} підходів · ${fmt(volume(workout))} кг · ${Math.max(1, Math.round((workout.finished - workout.started) / 60000))} хв</span>
         </span>
-        <time class="history-date-badge" datetime="${new Date(workout.started).toISOString()}" aria-label="${esc(new Date(workout.started).toLocaleDateString('uk-UA', {day:'numeric',month:'long',year:'numeric'}))}">
-          <span class="history-date-day">${String(new Date(workout.started).getDate()).padStart(2, '0')}</span>
-          <span class="history-date-month">${esc(new Date(workout.started).toLocaleDateString('uk-UA', {month:'long'}))}</span>
-          <span class="history-date-year">${new Date(workout.started).getFullYear()}</span>
+        <time class="history-date-group" datetime="${new Date(workout.started).toISOString()}" aria-label="${esc(new Date(workout.started).toLocaleDateString('uk-UA', {day:'numeric',month:'long',year:'numeric'}))}">
+          <span class="history-date-part">${String(new Date(workout.started).getDate()).padStart(2, '0')}</span>
+          <span class="history-date-part">${String(new Date(workout.started).getMonth() + 1).padStart(2, '0')}</span>
+          <span class="history-date-part">${String(new Date(workout.started).getFullYear()).slice(-2)}</span>
         </time>
       </summary>
       <div class="history-day-toolbar"><span class="muted">${workout.exercises.length} вправ у тренуванні</span><button class="danger history-delete-day" onclick="deleteHistoryWorkout('${workout.id}')">Видалити тренування</button></div>

@@ -32,7 +32,7 @@ function renderChoices() {
   const q = document.getElementById('search').value.trim().toLocaleLowerCase('uk-UA');
   window.filtered = [...new Set([...catalog, ...db.custom])].filter(name => exerciseMuscleSearchText(name).includes(q));
   const groups = groupExercisesByPrimary(filtered.map((name, pickerIndex) => ({ name, pickerIndex })));
-  document.getElementById('choices').innerHTML = groups.map(group => `<section class="muscle-group">${muscleGroupHeading(group)}${group.items.map(exercise => `<button class="exercise-choice" onclick="addExercise(filtered[${exercise.pickerIndex}])">${exerciseNameHTML(exercise.name)} <span style="float:right">＋</span>${muscleDetailsHTML(exercise)}</button>`).join('')}</section>`).join('') || '<p>Не знайдено. Додайте свою вправу нижче.</p>';
+  document.getElementById('choices').innerHTML = groups.map(group => muscleGroupHTML(group, group.items.map(exercise => `<button class="exercise-choice" onclick="addExercise(filtered[${exercise.pickerIndex}])">${exerciseNameHTML(exercise.name)} <span style="float:right">＋</span>${muscleDetailsHTML(exercise)}</button>`).join(''), 'picker', Boolean(q))).join('') || '<p>Не знайдено. Додайте свою вправу нижче.</p>';
 }
 function addExercise(name){if(!db.active)return;const last=[...db.workouts].reverse().flatMap(w=>w.exercises).find(e=>e.name===name);db.active.exercises.push({name,trackingType:last?.trackingType||db.exerciseCatalog?.find(e=>e.name===name)?.type||'weight_reps',sets:last?last.sets.filter(s=>s.done).map(s=>({...s,id:uid(),done:false})):Array.from({length:3},()=>({id:uid(),kg:0,reps:10,done:false}))});save();document.getElementById('picker').close();render()}
 function addCustom(){const input=document.getElementById('custom'),n=input.value.trim();if(!n)return;db.custom.push(n);input.value='';addExercise(n)}
@@ -123,12 +123,12 @@ function deleteHistoryWorkout(workoutId) {
 function progressView() {
   const names = [...new Set(db.workouts.flatMap(workout => workout.exercises.filter(exercise => exercise.sets.some(set => set.done && set.kg > 0)).map(exercise => exercise.name)))];
   const groups = groupExercisesByPrimary(names);
-  const records = groups.map(group => `<section class="muscle-group">${muscleGroupHeading(group)}${group.items.map(name => {
+  const records = groups.map(group => muscleGroupHTML(group, group.items.map(name => {
     const best = Math.max(...db.workouts.flatMap(workout => workout.exercises.filter(exercise => exercise.name === name).flatMap(exercise => exercise.sets.filter(set => set.done).map(set => set.kg))));
     return `<div class="row list-item record-row"><span class="record-name">${exerciseNameHTML(name)}${muscleDetailsHTML(name)}</span><strong class="record-values">${weightHTML(best)}</strong></div>`;
-  }).join('')}</section>`).join('');
+  }).join(''), 'progress')).join('');
   return `<div class="eyebrow">Сила в послідовності</div><h1>Особистий прогрес.</h1><p>Максимальна вага у виконаному підході та обсяг останніх тренувань.</p>
-    <div class="card"><h2>Ваші рекорди</h2><p class="muscle-source">Вправи згруповано за головними м’язами. Другорядні м’язи показано окремо. Класифікація — за даними Hevy.</p>
+    <div class="card"><h2>Ваші рекорди</h2><p class="muscle-source">Натисніть на групу, щоб розгорнути вправи. Кольором на схемі позначено основну ділянку. Схеми умовні; класифікація вправ — за даними Hevy.</p>
       ${records || '<p>Рекорди з’являться після першого завершеного тренування.</p>'}
     </div>
     <div class="card"><h2>Обсяг тренувань</h2><p class="small">Сума ваги × повторення для виконаних підходів; вага тіла не враховується.</p>
@@ -149,7 +149,7 @@ function catalogueRows(query) {
   const q = query.trim().toLocaleLowerCase('uk-UA');
   const filtered = all.filter(exercise => [exerciseMuscleSearchText(exercise), equipmentUk[exercise.equipment] || exercise.equipment || ''].join(' ').toLocaleLowerCase('uk-UA').includes(q));
   const groups = groupExercisesByPrimary(filtered);
-  return `<div class="muted">${filtered.length} із ${all.length} вправ · за головними м’язами</div>` + groups.map(group => `<section class="muscle-group">${muscleGroupHeading(group)}${group.items.map(exercise => `<div class="list-item"><strong>${exerciseNameHTML(exercise.name)}</strong>${muscleDetailsHTML(exercise)}<div class="muted" style="margin-top:4px">${esc(equipmentUk[exercise.equipment] || exercise.equipment || 'Обладнання не зазначено')}</div></div>`).join('')}</section>`).join('') + (!all.length ? '<p>Додайте власну вправу або імпортуйте особистий каталог.</p>' : !filtered.length ? '<p>За цим запитом вправ не знайдено.</p>' : '');
+  return `<div class="muted">${filtered.length} із ${all.length} вправ · натисніть на групу, щоб розгорнути</div>` + groups.map(group => muscleGroupHTML(group, group.items.map(exercise => `<div class="list-item"><strong>${exerciseNameHTML(exercise.name)}</strong>${muscleDetailsHTML(exercise)}<div class="muted" style="margin-top:4px">${esc(equipmentUk[exercise.equipment] || exercise.equipment || 'Обладнання не зазначено')}</div></div>`).join(''), 'catalogue', Boolean(q))).join('') + (!all.length ? '<p>Додайте власну вправу або імпортуйте особистий каталог.</p>' : !filtered.length ? '<p>За цим запитом вправ не знайдено.</p>' : '');
 }
 function renderCatalogueRows(q){document.getElementById('catalogueRows').innerHTML=catalogueRows(q)}
 function createCatalogueExercise(){const name=prompt('Назва вашої вправи');if(!name?.trim())return;const n=name.trim().slice(0,100);if(!db.custom.includes(n))db.custom.push(n);save();render()}

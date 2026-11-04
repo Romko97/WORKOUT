@@ -11,3 +11,28 @@
 .muscle-group .exercise-choice .muscle-details { font-size: 11px; }
 #choices .muscle-group { margin-top: 18px; }
 #choices .muscle-group-title { font-size: 15px; }
+.muscle-fold{margin-top:12px;border:1px solid #dfe7d6;border-radius:15px;background:#fff;overflow:hidden}
+.muscle-fold+.muscle-fold{padding-top:0}
+.muscle-fold-heading{display:flex;align-items:center;gap:16px;list-style:none;cursor:pointer;padding:12px 18px;background:#f2f6ed;transition:background-color .18s ease}
+.muscle-fold-heading::-webkit-details-marker{display:none}
+.muscle-fold-heading::marker{content:''}
+.muscle-fold-heading:hover{background:#eaf1e1}
+.muscle-fold-heading:focus-visible{outline:3px solid #679b37;outline-offset:-3px;border-radius:14px}
+.muscle-illustration{flex:0 0 84px;display:flex;justify-content:center;background:#fff;border:1px solid #e2e8dc;border-radius:11px;padding:5px}
+.muscle-diagram{display:block;width:72px;height:94px}
+.muscle-diagram text{font:8px system-ui,sans-serif;fill:#5b6953}
+.muscle-fold-caption{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.muscle-fold-title{font-size:18px;font-weight:700;color:#283721;line-height:1.4}
+.muscle-fold-hint{font-size:11px;color:#64745a;margin-top:3px}
+.muscle-fold-arrow{font-size:25px;color:#526844;transition:transform .18s ease}
+.muscle-fold[open]>.muscle-fold-heading .muscle-fold-arrow{transform:rotate(180deg)}
+.muscle-fold .when-open{display:none}
+.muscle-fold[open]>.muscle-fold-heading .when-open{display:inline}
+.muscle-fold[open]>.muscle-fold-heading .when-closed{display:none}
+.muscle-fold-content{padding:0 18px 8px}
+.muscle-fold[open]>.muscle-fold-content{animation:forma-reveal .18s ease-out}
+#choices .muscle-fold-heading{padding:10px;gap:12px}
+#choices .muscle-illustration{flex-basis:64px}
+#choices .muscle-diagram{width:52px;height:68px}
+@media(max-width:600px){.muscle-fold-heading{padding:10px 12px;gap:12px}.muscle-illustration{flex-basis:70px}.muscle-diagram{width:58px;height:76px}.muscle-fold-title{font-size:16px}.muscle-fold-content{padding:0 12px 6px}}
+@media(prefers-reduced-motion:reduce){.muscle-fold-heading,.muscle-fold-arrow{transition:none}.muscle-fold[open]>.muscle-fold-content{animation:none}}

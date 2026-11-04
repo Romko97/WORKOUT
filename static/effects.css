@@ -1,0 +1,57 @@
+/* Short, optional motion: never delay input or saving. */
+button, .card, .history-exercise, .history-date-part, input, select {
+  transition: background-color 180ms ease, border-color 180ms ease,
+    box-shadow 180ms ease, transform 180ms ease, color 180ms ease;
+}
+button:active { transform: scale(.97); }
+input:focus-visible, select:focus-visible {
+  box-shadow: 0 0 0 4px #b4dc7833;
+}
+.history-date-part { transform-origin: 50% 70%; }
+.history-day[open] .history-exercise-grid,
+.history-day[open] .history-day-toolbar {
+  animation: forma-reveal 190ms ease-out;
+}
+.set { border-radius: 10px; }
+.set.done { background: #edf6e4; }
+dialog[open] { animation: forma-dialog 180ms ease-out; }
+#notice:not([hidden]) { animation: forma-notice 180ms ease-out; }
+
+@media (hover: hover) and (pointer: fine) {
+  button:hover { filter: none; transform: translateY(-1px); }
+  .primary:hover { background: #c9f58a; box-shadow: 0 5px 16px #7aa84930; }
+  .dark:hover, nav button.active:hover { background: #2c3728; box-shadow: 0 4px 12px #20271f24; }
+  .danger:hover { background: #ffe3da; }
+  .card:hover { border-color: #cbd8bc; box-shadow: 0 5px 20px #26351d0a; }
+  .history-exercise:hover { background: #f0f5e9; border-color: #d4dfc7; }
+  .history-date-part:hover {
+    transform: translateY(-4px) rotate(-2deg);
+    box-shadow: 0 7px 12px #1112;
+  }
+  .history-date-part:nth-child(2):hover { transform: translateY(-4px) rotate(2deg); }
+  .exercise-choice:hover { transform: translateX(3px); background: #e7f0de; }
+}
+
+@keyframes forma-reveal {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes forma-dialog {
+  from { opacity: 0; transform: translateY(8px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes forma-notice {
+  from { opacity: 0; margin-bottom: -5px; }
+  to { opacity: 1; margin-bottom: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  button:hover, button:active, .history-date-part:hover,
+  .history-date-part:nth-child(2):hover, .exercise-choice:hover {
+    transform: none !important;
+  }
+}

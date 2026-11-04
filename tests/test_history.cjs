@@ -31,6 +31,7 @@ const context = {
   confirm: () => allow, setTimeout() {}, clearTimeout() {}, setInterval() {}, navigator: {}
 };
 vm.createContext(context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../static/effects.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../static/app.js'), 'utf8'), context);
 const run = code => vm.runInContext(code, context);
 

@@ -33,6 +33,7 @@ const context = {
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../static/effects.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../static/localization.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../static/muscles.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../static/app.js'), 'utf8'), context);
 const run = code => vm.runInContext(code, context);
 

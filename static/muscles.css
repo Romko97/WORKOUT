@@ -1,0 +1,13 @@
+.muscle-group { margin-top: 26px; }
+.muscle-group + .muscle-group { padding-top: 6px; }
+.muscle-group-title { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; padding: 11px 14px; border-left: 4px solid #a5cf6d; border-radius: 0 10px 10px 0; background: #eff4e8; color: #283721; font-size: 17px; line-height: 1.5; }
+.muscle-group-count { font-size: 12px; font-weight: 400; color: #59684f; }
+.muscle-details { display: flex; flex-wrap: wrap; gap: 3px 14px; margin-top: 6px; color: #5d6c53; font-size: 12px; font-weight: 400; line-height: 1.6; }
+.muscle-field { font-weight: 600; color: #46553c; }
+.muscle-group .list-item:last-child { border-bottom: 0; }
+.muscle-group .record-row { align-items: center; }
+.muscle-source { font-size: 12px; color: #65735b; line-height: 1.7; }
+.muscle-group .exercise-choice { padding: 13px 15px; }
+.muscle-group .exercise-choice .muscle-details { font-size: 11px; }
+#choices .muscle-group { margin-top: 18px; }
+#choices .muscle-group-title { font-size: 15px; }

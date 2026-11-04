@@ -41,12 +41,16 @@ function history() {
   const workouts = [...db.workouts].reverse();
   const cards = workouts.map(workout => `
     <details class="card history-day" data-workout-id="${esc(workout.id)}">
-      <summary style="cursor:pointer">
-        <strong>${esc(workout.name)}</strong>
-        <span class="muted history-date">${date(workout.started)}</span>
-        <div class="muted" style="margin-top:10px">
-          ${completed(workout)} підходів · ${fmt(volume(workout))} кг · ${Math.max(1, Math.round((workout.finished - workout.started) / 60000))} хв
-        </div>
+      <summary class="history-summary">
+        <span class="history-summary-copy">
+          <span class="history-summary-title"><span class="history-toggle" aria-hidden="true">▸</span><strong>${esc(workout.name)}</strong></span>
+          <span class="muted history-summary-stats">${completed(workout)} підходів · ${fmt(volume(workout))} кг · ${Math.max(1, Math.round((workout.finished - workout.started) / 60000))} хв</span>
+        </span>
+        <time class="history-date-badge" datetime="${new Date(workout.started).toISOString()}" aria-label="${esc(new Date(workout.started).toLocaleDateString('uk-UA', {day:'numeric',month:'long',year:'numeric'}))}">
+          <span class="history-date-day">${String(new Date(workout.started).getDate()).padStart(2, '0')}</span>
+          <span class="history-date-month">${esc(new Date(workout.started).toLocaleDateString('uk-UA', {month:'long'}))}</span>
+          <span class="history-date-year">${new Date(workout.started).getFullYear()}</span>
+        </time>
       </summary>
       <div class="history-day-toolbar"><span class="muted">${workout.exercises.length} вправ у тренуванні</span><button class="danger history-delete-day" onclick="deleteHistoryWorkout('${workout.id}')">Видалити тренування</button></div>
       <div class="history-exercise-grid">

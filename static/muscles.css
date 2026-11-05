@@ -36,3 +36,23 @@
 #choices .muscle-diagram{width:52px;height:68px}
 @media(max-width:600px){.muscle-fold-heading{padding:10px 12px;gap:12px}.muscle-illustration{flex-basis:70px}.muscle-diagram{width:58px;height:76px}.muscle-fold-title{font-size:16px}.muscle-fold-content{padding:0 12px 6px}}
 @media(prefers-reduced-motion:reduce){.muscle-fold-heading,.muscle-fold-arrow{transition:none}.muscle-fold[open]>.muscle-fold-content{animation:none}}
+.muscle-fold-heading{gap:24px;padding:16px 20px}
+.muscle-fold-caption{gap:6px}
+.muscle-fold-title{font-size:22px}
+button.muscle-illustration.anatomy-zoom{flex:0 0 236px;width:236px;display:flex;flex-direction:column;align-items:stretch;gap:9px;padding:10px;background:#101214;color:#fff;border:1px solid #252c30;border-radius:14px;cursor:zoom-in}
+.anatomy-visual{display:block;width:100%}
+.muscle-diagram.anatomy-detailed{display:block;width:100%;height:auto;aspect-ratio:1}
+.anatomy-view-labels{display:flex;justify-content:space-around;color:#c8d5dc;font-size:10px;line-height:1.6;font-weight:400;padding-bottom:3px;letter-spacing:.3px}
+.anatomy-zoom-label{color:#a7d8ff;font-size:11px;font-weight:500;line-height:1.6}
+button.anatomy-zoom:hover{transform:none!important;background:#101214;border-color:#80b5d8;box-shadow:0 4px 18px #13354918}
+.muscle-fold-hint{font-size:12px}
+#choices button.muscle-illustration.anatomy-zoom{flex-basis:172px;width:172px;padding:8px}
+#choices .muscle-diagram.anatomy-detailed{width:100%;height:auto}
+#muscleDiagramDialog{width:min(780px,94vw);padding:0;background:#101214;color:#fff;border:1px solid #3b444a;border-radius:18px;max-height:94vh}
+.anatomy-dialog-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 22px;position:sticky;top:0;background:#101214;z-index:1;border-bottom:1px solid #293038}
+.anatomy-dialog-header h2{margin:0;color:#fff}.anatomy-dialog-header button{color:#dae3e7}
+.anatomy-dialog-image{max-width:660px;margin:auto;padding:0 12px}
+.anatomy-dialog-image .anatomy-view-labels{font-size:13px}
+.anatomy-note{margin:10px 22px 18px;color:#c6d1d7;font-size:12px;text-align:center}
+@media(max-width:700px){button.muscle-illustration.anatomy-zoom{flex-basis:192px;width:192px}.muscle-fold-heading{gap:16px;padding:12px}.muscle-fold-title{font-size:18px}}
+@media(max-width:440px){.muscle-fold-heading{display:grid;grid-template-columns:minmax(0,1fr) 24px;gap:12px}button.muscle-illustration.anatomy-zoom,#choices button.muscle-illustration.anatomy-zoom{grid-column:1/-1;justify-self:center;width:210px}.muscle-fold-caption{grid-column:1}.muscle-fold-arrow{grid-column:2}.muscle-fold-title{font-size:18px}}

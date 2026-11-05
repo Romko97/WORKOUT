@@ -469,7 +469,7 @@ function muscleGroupHTML(group, content, scope, forceOpen = false) {
   const open = forceOpen || expandedMuscleGroups.get(scope + ':' + group.key) === true;
   return `<details class="muscle-group muscle-fold" data-group-scope="${esc(scope)}" data-muscle-key="${esc(group.key)}" data-forced-open="${forceOpen}" ontoggle="rememberMuscleGroup(this)" ${open ? 'open' : ''}>
     <summary class="muscle-fold-heading">
-      <span class="muscle-illustration">${muscleDiagramSVG(group.key)}</span>
+      <button type="button" class="muscle-illustration anatomy-zoom" data-muscle-key="${esc(group.key)}" aria-label="Збільшити схему: ${esc(group.title)}" onclick="event.preventDefault();event.stopPropagation();openMuscleDiagram(this.dataset.muscleKey)">${muscleDiagramSVG(group.key)}<span class="anatomy-zoom-label">Збільшити ↗</span></button>
       <span class="muscle-fold-caption"><span class="muscle-fold-title">${esc(group.title)}</span><span class="muscle-group-count">${exerciseCountLabel(group.items.length)}</span><span class="muscle-fold-hint"><span class="when-closed">Показати вправи</span><span class="when-open">Згорнути вправи</span></span></span>
       <span class="muscle-fold-arrow" aria-hidden="true">⌄</span>
     </summary>

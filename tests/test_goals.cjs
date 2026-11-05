@@ -1,0 +1,14 @@
+const fs=require('fs'),path=require('path'),vm=require('vm'),assert=require('assert');
+const records=[{id:'press',name:'Bench Press (Dumbbell)',type:'weight_reps',primary_muscle_group:'chest',equipment:'dumbbell'},{id:'run',name:'Running',type:'distance_duration',primary_muscle_group:'cardio',equipment:'none'},{id:'snatch',name:'Snatch',type:'weight_reps',primary_muscle_group:'full_body',equipment:'barbell'},{id:'custom',name:'Custom',type:'weight_reps',primary_muscle_group:'chest',is_custom:true}];
+const elements=new Map(),el=id=>{if(!elements.has(id))elements.set(id,{innerHTML:'',value:''});return elements.get(id)};let fail=false,written=null,renders=0;
+const c={db:{workouts:[{id:'workout'}],routines:[{id:'routine'}],active:null,exerciseCatalog:records,preferences:{otherSetting:'keep'}},document:{getElementById:el},esc:x=>String(x),save(){if(fail)return false;written=JSON.parse(JSON.stringify(c.db));return true},render(){renders++},renderCatalogueRows(){},tab:'progress'};
+vm.createContext(c);vm.runInContext(fs.readFileSync(path.join(__dirname,'../static/goals.js'),'utf8'),c);const run=code=>vm.runInContext(code,c);
+assert.equal(run('currentTrainingGoal()'),null);assert.equal(run("exerciseGoalHTML('Running')"),'');
+run("changeTrainingGoal('hypertrophy')");assert.equal(written.preferences.trainingGoal,'hypertrophy');assert.equal(written.preferences.otherSetting,'keep');assert.equal(written.workouts[0].id,'workout');assert.equal(written.routines[0].id,'routine');
+assert.ok(run("exerciseGoalPriority('Bench Press (Dumbbell)').score")>run("exerciseGoalPriority('Running').score"));
+assert.ok(run("exerciseGoalPriority('Running','endurance').score")>run("exerciseGoalPriority('Bench Press (Dumbbell)','endurance').score"));assert.equal(run("exerciseGoalPriority('Snatch','power').score"),5);assert.equal(run("exerciseGoalPriority('Custom').score"),null);assert.equal(run("exerciseGoalPriority('Missing').score"),null);
+c.variant={...records[0],equipment:'machine'};assert.equal(run('exerciseGoalPriority(variant).score'),run("exerciseGoalPriority('Bench Press (Dumbbell)').score"));
+run('renderGoalSelector()');assert.ok(el('trainingGoalPanel').innerHTML.includes('Числові зірочки — правила цього застосунку'));assert.ok(el('trainingGoalPanel').innerHTML.includes('Кардіовитривалість'));
+const previous=c.db.preferences;fail=true;run("changeTrainingGoal('power')");assert.strictEqual(c.db.preferences,previous);fail=false;
+run("changeTrainingGoal('invalid')");assert.equal(c.db.preferences.trainingGoal,'hypertrophy');run("changeTrainingGoal('')");assert.equal(run('currentTrainingGoal()'),null);assert.equal(run("exerciseGoalHTML('Running')"),'');
+console.log('PASS: optional goal, goal-specific transparent priorities, no equipment penalty, unknown/custom unrated, preferences saved without changing workouts, rollback and invalid goal handling.');

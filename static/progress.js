@@ -27,7 +27,7 @@ function exerciseProgressView(){
   const performed=performedExerciseNames();
   const explorer=groups.map(group=>muscleGroupHTML(group,group.items.map(name=>{
     const index=names.indexOf(name),selected=selectedProgressExercise===name;
-    return `<div class="progress-exercise"><button type="button" class="progress-exercise-button ${performed.has(name)?'exercise-performed':''}" data-progress-name="${esc(name)}" aria-expanded="${selected}" aria-controls="exercise-progress-${index}" onclick="selectProgressExercise(this)"><span>${exerciseNameHTML(name)}</span><span aria-hidden="true">⌄</span></button><div id="exercise-progress-${index}" ${selected?'':'hidden'}>${selected?progressExerciseContent(name):''}</div></div>`;
+    return `<div class="progress-exercise"><button type="button" class="progress-exercise-button ${performed.has(name)?'exercise-performed':''}" data-progress-name="${esc(name)}" aria-expanded="${selected}" aria-controls="exercise-progress-${index}" onclick="selectProgressExercise(this)"><span>${exerciseNameHTML(name)}${exerciseGoalHTML(name)}</span><span aria-hidden="true">⌄</span></button><div id="exercise-progress-${index}" ${selected?'':'hidden'}>${selected?progressExerciseContent(name):''}</div></div>`;
   }).join(''),'exercise-progress')).join('')||'<p>Додайте вправу або імпортуйте тренування.</p>';
   return `<div class="eyebrow">Сила в послідовності</div><h1>Особистий прогрес.</h1><p>Рекорди, зміни результатів і всі підходи кожної вправи.</p>${progressSection('records','Рекорди',records)}${progressSection('volume','Обсяг тренувань',recent.length?volumes:'<p>Ще немає тренувань.</p>')}${progressSection('explorer','Прогрес','<p class="small">Виберіть групу м’язів, а потім вправу.</p>'+explorer)}`;
 }

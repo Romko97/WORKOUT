@@ -198,11 +198,7 @@ function renderActiveSet(s,j,i,e){
  const firstKey=type==='reps_only'?'reps':type==='duration'?'durationSeconds':type==='distance_duration'?'distanceMeters':'kg';
  const secondKey=['duration','reps_only'].includes(type)?null:timed?'durationSeconds':distance?'distanceMeters':'reps';
  const labels={kg:'Вага, кг',reps:'Повторення',durationSeconds:'Тривалість, с',distanceMeters:'Відстань, м'};
- const input=key=>{
-  if(!key)return '<span></span>';
-  const field=`<input type="number" inputmode="decimal" min="0" step="${key==='reps'?'1':'0.1'}" aria-label="${labels[key]}, підхід ${j+1}" value="${key==='reps'?(s[key]||0):Number(s[key]||0).toFixed(1)}" onchange="updateSet(${i},${j},'${key}',this)">`;
-  return key==='kg'?`<label class="weight-input">${field}<span class="weight-lb" title="Еквівалент у фунтах">${poundsText(s.kg||0)}</span></label>`:field;
- };
+ const input=key=>setValueControl(s,i,j,key,labels[key]);
  return `<div id="set-${esc(s.id)}" class="set ${s.done?'done':''}"><span class="muted">${j+1}</span>${input(firstKey)}${input(secondKey)}<button class="check" aria-label="Позначити підхід ${j+1}" aria-pressed="${s.done}" onclick="toggle(${i},${j})">${s.done?'✓':'○'}</button><button class="subtle" style="padding:4px" onclick="removeSet(${i},${j})" aria-label="Видалити підхід ${j+1}">×</button></div>`;
 }
 function setColumnLabels(e){const t=e.trackingType||'weight_reps';return t==='reps_only'?['Повтори','']:t==='bodyweight_weighted'?['Додаткова вага, кг','Повтори']:t==='duration'?['Секунди','']:t==='distance_duration'?['Метри','Секунди']:t==='weight_duration'?['Кг','Секунди']:t==='short_distance_weight'?['Кг','Метри']:['Кг','Повтори']}

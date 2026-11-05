@@ -2,7 +2,7 @@ const fs=require('fs'),path=require('path'),vm=require('vm'),assert=require('ass
 const elements=new Map();const el=id=>{if(!elements.has(id))elements.set(id,{value:'',textContent:'',innerHTML:'',hidden:false,close(){},showModal(){}});return elements.get(id)};
 let fail=false,written=null;
 const c={crypto:crypto.webcrypto,Date,document:{getElementById:el,querySelectorAll:()=>[]},localStorage:{setItem(){}},formaSync:{load:async()=>({workouts:[],routines:[],active:null,custom:[],exerciseCatalog:[]}),save:state=>{if(fail)throw Error('cache');written=JSON.parse(JSON.stringify(state));}},setTimeout(){},clearTimeout(){},setInterval(){},navigator:{}};c.window=c;
-vm.createContext(c);for(const name of ['effects','localization','anatomy','muscles','custom-exercises','app'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../static/'+name+'.js'),'utf8'),c);
+vm.createContext(c);for(const name of ['effects','localization','anatomy','muscles','custom-exercises','set-controls','app'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../static/'+name+'.js'),'utf8'),c);
 const run=code=>vm.runInContext(code,c);
 (async()=>{
  await c.formaReady;
@@ -19,6 +19,13 @@ const run=code=>vm.runInContext(code,c);
   if(['duration','weight_duration','distance_duration'].includes(type)){assert.equal(run('db.active.exercises.at(-1).sets[0].reps'),0);assert.equal(run('db.active.exercises.at(-1).sets[0].durationSeconds'),60);}
  }
  assert.ok(run("safeExerciseImage('data:image/png;base64,iVBORw0KGgo=')"));assert.ok(!run("safeExerciseImage('data:image/svg+xml;base64,PHN2Zz4=')"));assert.ok(!run("safeExerciseImage('https://example.com/photo.png')"));
- console.log('PASS: form validation, duplicate names, muscle grouping, rollback on save failure, all seven exercise types, safe image formats.');
+ run("db.active={id:'controls',name:'Controls',started:1000,exercises:[{name:'Жим',sets:[{id:'control-set',kg:56.7,reps:15,done:false}]}]}");
+ el('value-control-set-reps').value='15';run("changeSetValue(0,0,'reps',1)");assert.equal(run('db.active.exercises[0].sets[0].reps'),16);
+ el('value-control-set-kg').value='56.7';run("changeSetValue(0,0,'kg',-1)");assert.equal(run('db.active.exercises[0].sets[0].kg'),56.6);
+ el('value-control-set-reps').value='0';run("changeSetValue(0,0,'reps',-1)");assert.equal(run('db.active.exercises[0].sets[0].reps'),0);
+ el('value-control-set-reps').value='10000';run("changeSetValue(0,0,'reps',1)");assert.equal(run('db.active.exercises[0].sets[0].reps'),10000);
+ el('value-control-set-kg').value='2000';run("changeSetValue(0,0,'kg',1)");assert.equal(run('db.active.exercises[0].sets[0].kg'),2000);
+ assert.ok(run("renderActiveSet(db.active.exercises[0].sets[0],0,0,db.active.exercises[0])").includes('number-stepper'));
+ console.log('PASS: form validation, duplicate names, muscle grouping, rollback on save failure, all seven exercise types, safe image formats and horizontal control bounds.');
 })().catch(e=>{console.error(e);process.exitCode=1});
 

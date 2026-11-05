@@ -77,6 +77,6 @@ function weightHTML(kg, total = false) {
 }
 
 function refreshPounds(input) {
-  const hint = input.parentElement?.querySelector('.weight-lb');
+  const hint = input.closest?.('.stepper-field')?.querySelector('.weight-lb') || input.parentElement?.querySelector('.weight-lb');
   if (hint) hint.textContent = poundsText(input.value);
 }

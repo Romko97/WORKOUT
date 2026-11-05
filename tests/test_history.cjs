@@ -36,6 +36,7 @@ vm.runInContext(fs.readFileSync(path.join(__dirname, '../static/localization.js'
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../static/muscles.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../static/anatomy.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../static/custom-exercises.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../static/set-controls.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../static/app.js'), 'utf8'), context);
 const run = code => vm.runInContext(code, context);
 

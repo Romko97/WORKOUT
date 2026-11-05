@@ -54,46 +54,17 @@ function exerciseProgressChart(timeline,metric,title,unit){
   const boundaries=[...months.map(month=>month.start),months.at(-1).end].map(time=>`<line x1="${position(time)}" x2="${position(time)}" y1="30" y2="228" class="chart-month-boundary"/>`).join('');
   const labelStep=Math.max(1,Math.ceil(months.length/4));
   const labels=months.filter((month,index)=>index%labelStep===0).map(month=>{const middle=(Math.max(first,month.start)+Math.min(last,month.end))/2;return `<text x="${first===last?350:position(middle)}" y="246" text-anchor="middle" class="chart-month-label">${esc(new Date(month.start).toLocaleDateString('uk-UA',{month:'short',year:'numeric'}))}</text>`;}).join('');
-  return `<section class="exercise-chart"><div class="row"><h3>${title}</h3><span class="progress-best">🏅 ${metric==='kg'?weightHTML(best):best+' повторень'}</span></div><svg viewBox="0 0 720 265" class="progress-chart-svg" role="group" aria-label="${title}: зміна в часі"><text x="64" y="18">${unit}</text>${ticks}${boundaries}<polyline points="${points.map(p=>x(p)+','+y(p)).join(' ')}" class="chart-line"/>${points.map((p,index)=>`<circle cx="${x(p)}" cy="${y(p)}" r="${p[metric]===best?7:5}" class="chart-point ${p[metric]===best?'chart-record':''}" role="button" tabindex="0" aria-label="${esc(progressDate(p.workout.started))}: ${fmt(p[metric])} ${unit}${p[metric]===best?', рекорд':''}" onclick="showProgressPoint('${metric}',${index})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showProgressPoint('${metric}',${index})}"><title>${esc(progressDate(p.workout.started))}: ${fmt(p[metric])} ${unit}</title></circle>`).join('')}${labels}<text x="370" y="263" text-anchor="middle">Дата тренування</text></svg>${progressDateRowHTML(points,metric)}<div id="progress-point-${metric}" class="progress-point-detail" role="status">Натисніть точку на графіку.</div></section>`;
+  return `<section class="exercise-chart"><div class="row"><h3>${title}</h3><span class="progress-best">🏅 ${metric==='kg'?weightHTML(best):best+' повторень'}</span></div><svg viewBox="0 0 720 265" class="progress-chart-svg" role="group" aria-label="${title}: зміна в часі"><text x="64" y="18">${unit}</text>${ticks}${boundaries}<polyline points="${points.map(p=>x(p)+','+y(p)).join(' ')}" class="chart-line"/>${points.map((p,index)=>`<circle cx="${x(p)}" cy="${y(p)}" r="${p[metric]===best?7:5}" class="chart-point ${p[metric]===best?'chart-record':''}" role="button" tabindex="0" aria-label="${esc(progressDate(p.workout.started))}: ${fmt(p[metric])} ${unit}${p[metric]===best?', рекорд':''}" onclick="showProgressPoint('${metric}',${index})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showProgressPoint('${metric}',${index})}"><title>${esc(progressDate(p.workout.started))}: ${fmt(p[metric])} ${unit}</title></circle>`).join('')}${labels}<text x="370" y="263" text-anchor="middle">Дата тренування</text></svg><div id="progress-point-${metric}" class="progress-point-detail" role="status">Натисніть точку на графіку.</div></section>`;
 }
 function progressChartMonths(points){
   const first=new Date(points[0].workout.started),last=new Date(points.at(-1).workout.started),months=[];
   for(let year=first.getFullYear(),month=first.getMonth();year<last.getFullYear()||year===last.getFullYear()&&month<=last.getMonth();month++){if(month===12){month=0;year++;if(year>last.getFullYear())break;}months.push({year,month,start:new Date(year,month,1).getTime(),end:new Date(year,month+1,1).getTime()});}
   return months;
 }
-function progressDayKey(timestamp){const date=new Date(timestamp);return date.getFullYear()+'-'+date.getMonth()+'-'+date.getDate();}
-function progressDateRowItems(points){
-  const months=progressChartMonths(points),dates=new Map();
-  points.forEach(point=>{const date=new Date(point.workout.started);date.setHours(0,0,0,0);dates.set(date.getTime(),true);});
-  let added=0;
-  const lastDay=new Date(months.at(-1).end);lastDay.setDate(lastDay.getDate()-1);
-  for(const time of [months[0].start,lastDay.getTime()]){if(!dates.has(time)){dates.set(time,false);added++;}}
-  while(added<2){
-    const times=[...dates.keys()].sort((a,b)=>a-b),gaps=times.slice(1).map((time,index)=>({start:times[index],end:time})).sort((a,b)=>(b.end-b.start)-(a.end-a.start));
-    let candidate=null;
-    for(const gap of gaps){const day=new Date((gap.start+gap.end)/2);day.setHours(0,0,0,0);if(day.getTime()>gap.start&&day.getTime()<gap.end&&!dates.has(day.getTime())){candidate=day.getTime();break;}}
-    if(candidate===null)break;dates.set(candidate,false);added++;
-  }
-  return [...dates].sort(([a],[b])=>a-b).map(([timestamp,workout])=>({timestamp,workout}));
-}
-function progressDateRowHTML(points,metric){
-  return `<p class="chart-calendar-legend"><span class="calendar-blue-key"></span> Сині дати — тренування з цією вправою. Дати розташовані послідовно.</p><div class="chart-date-row" aria-label="Дати тренувань">${progressDateRowItems(points).map(({timestamp,workout})=>{
-    const date=new Date(timestamp),label=esc(progressDate(timestamp)),content=`<strong>${String(date.getDate()).padStart(2,'0')}</strong><span>${String(date.getMonth()+1).padStart(2,'0')} · ${String(date.getFullYear()).slice(-2)}</span>`;
-    return workout?`<button type="button" class="calendar-date has-workout" data-calendar-key="${progressDayKey(timestamp)}" data-calendar-metric="${metric}" aria-label="${label}: день тренування" onclick="showProgressDay('${metric}',${timestamp})">${content}</button>`:`<span class="calendar-date" aria-label="${label}: немає тренування">${content}</span>`;
-  }).join('')}</div>`;
-}
-function showProgressDay(metric,timestamp){
-  if(!['kg','reps'].includes(metric)||!Number.isFinite(timestamp))return;
-  const points=exerciseTimeline(selectedProgressExercise).filter(p=>p[metric]!==null),key=progressDayKey(timestamp),matches=points.map((point,index)=>({point,index})).filter(({point})=>progressDayKey(point.workout.started)===key);
-  if(!matches.length)return;
-  showProgressPoint(metric,matches[0].index);
-  if(matches.length>1){const target=document.getElementById('progress-point-'+metric);target.innerHTML=matches.map(({point})=>`<div class="progress-day-session"><strong>${esc(progressDate(point.workout.started))} · ${esc(point.workout.name)}</strong><span>${metric==='kg'?weightHTML(point.kg):point.reps+' повторень'}</span><button type="button" class="dark" onclick="openProgressWorkout('${point.workout.id}')">Перейти на це тренування ↗</button></div>`).join('');}
-}
 function showProgressPoint(metric,index){
   if(!['kg','reps'].includes(metric)||!Number.isInteger(index))return;
   const points=exerciseTimeline(selectedProgressExercise).filter(p=>p[metric]!==null),point=points[index];if(!point)return;
   const best=Math.max(...points.map(p=>p[metric]));
-  document.querySelectorAll?.(`[data-calendar-metric="${metric}"]`).forEach(button=>{const selected=button.dataset.calendarKey===progressDayKey(point.workout.started);button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));});
   document.getElementById('progress-point-'+metric).innerHTML=`<div><strong>${esc(progressDate(point.workout.started))}</strong> · ${esc(point.workout.name)}<br>${metric==='kg'?weightHTML(point.kg):point.reps+' повторень'} ${point[metric]===best?'<span class="record-tag">🏅 Рекорд</span>':''}</div><button type="button" class="dark" onclick="openProgressWorkout('${point.workout.id}')">Перейти на це тренування ↗</button>`;
 }
 function exerciseHistoryTables(points){

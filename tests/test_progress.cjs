@@ -8,8 +8,13 @@ const c={db:{workouts:[third,first,second],custom:[],exerciseCatalog:[{name:'Unu
 vm.createContext(c);vm.runInContext(fs.readFileSync(path.join(__dirname,'../static/progress.js'),'utf8'),c);const run=s=>vm.runInContext(s,c);
 const points=run("exerciseTimeline('Row')");assert.deepEqual(Array.from(points,p=>p.workout.id),['first','second','third']);assert.equal(points[1].kg,20);assert.equal(points[1].reps,12);assert.equal(points[0].sets.length,2);
 assert.ok(run('progressExerciseNames()').includes('Unused'));assert.equal(run("exerciseTimeline('Unused').length"),0);
+c.yearPoints=[{workout:{started:new Date(2023,11,31).getTime()}},{workout:{started:new Date(2024,2,1).getTime()}}];
+const months=run('progressChartMonths(yearPoints)');assert.deepEqual(Array.from(months,m=>[m.year,m.month]),[[2023,11],[2024,0],[2024,1],[2024,2]]);
+const leapCalendar=run("progressCalendarHTML(yearPoints,'kg')");assert.ok(leapCalendar.includes('29 лют. 2024'));assert.equal((leapCalendar.match(/class="calendar-date has-workout"/g)||[]).length,2);
 c.points=points;const chart=run("exerciseProgressChart(points,'kg','Вага','кг')");assert.equal((chart.match(/role="button"/g)||[]).length,3);assert.equal((chart.match(/class="chart-point chart-record"/g)||[]).length,2);assert.ok(chart.includes('onkeydown='));
 run("selectedProgressExercise='Row';showProgressPoint('kg',1)");assert.ok(el('progress-point-kg').innerHTML.includes("openProgressWorkout('second')"));assert.ok(el('progress-point-kg').innerHTML.includes('Рекорд'));
+assert.ok(chart.includes('chart-calendar-month'));assert.ok(chart.includes('chart-month-label'));
+c.extra=make('same-day',10,[set(22,8)]);c.db.workouts.push(c.extra);c.sameDay=c.extra.started;run("showProgressDay('kg',sameDay)");assert.ok(el('progress-point-kg').innerHTML.includes("openProgressWorkout('second')"));assert.ok(el('progress-point-kg').innerHTML.includes("openProgressWorkout('same-day')"));c.db.workouts.pop();
 const tables=run('exerciseHistoryTables(points)');assert.ok(tables.indexOf('Тренування third')<tables.indexOf('Тренування first'));assert.ok(!tables.includes('999'));assert.ok(tables.includes('Рекорд повторень'));assert.ok(tables.includes('Новий рекорд ваги'));assert.equal((tables.match(/<tbody>/g)||[]).length,3);
 run("openProgressWorkout('second')");assert.equal(navigated,'history');assert.ok(opened&&focused);
 const original=JSON.stringify(c.db);run("showProgressPoint('kg',99);openProgressWorkout('missing')");assert.equal(JSON.stringify(c.db),original);

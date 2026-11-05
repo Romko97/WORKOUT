@@ -105,6 +105,21 @@ class PersistenceTests(unittest.TestCase):
         self.assertEqual(reopened['deletedWorkoutIds'], ['test-workout'])
         self.assertEqual(reopened['active'], state['active'])
 
+    def test_custom_exercise_metadata_and_image_roundtrip(self):
+        state = example()
+        state['exerciseCatalog'] = [{'id':'custom-1','name':'Моя тяга','is_custom':True,'type':'weight_reps','equipment':'machine','primary_muscle_group':'upper_back','secondary_muscle_groups':['biceps'],'image_data_url':'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j7J0AAAAASUVORK5CYII='}]
+        self.database.write(state, 0)
+        self.assertEqual(Database(self.path).read()['state'], state)
+
+    def test_invalid_custom_metadata_or_image_does_not_save(self):
+        state = example()
+        state['exerciseCatalog'] = [{'id':'custom-1','name':'Моя тяга','is_custom':True,'type':'weight_reps','equipment':'machine','primary_muscle_group':'upper_back','secondary_muscle_groups':['upper_back']}]
+        with self.assertRaises(ValueError): self.database.write(state,0)
+        state['exerciseCatalog'][0]['secondary_muscle_groups'] = []
+        state['exerciseCatalog'][0]['image_data_url'] = 'data:image/svg+xml;base64,PHN2Zz4='
+        with self.assertRaises(ValueError): self.database.write(state,0)
+        self.assertEqual(self.database.read()['revision'],0)
+
 
 class APITests(unittest.TestCase):
     def setUp(self):

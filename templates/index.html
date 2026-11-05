@@ -9,17 +9,19 @@
   <link rel="stylesheet" href="/static/effects.css">
   <link rel="stylesheet" href="/static/localization.css">
   <link rel="stylesheet" href="/static/muscles.css">
+  <link rel="stylesheet" href="/static/custom-exercises.css">
   <script src="/static/api.js" defer></script>
   <script src="/static/effects.js" defer></script>
   <script src="/static/localization.js" defer></script>
   <script src="/static/anatomy.js" defer></script>
   <script src="/static/muscles.js" defer></script>
+  <script src="/static/custom-exercises.js" defer></script>
   <script src="/static/app.js" defer></script>
 </head>
 <body>
 <header><div class="brand">ФОРМА<span>↗</span></div><div class="badge">ОСОБИСТИЙ ЩОДЕННИК</div></header>
 <main><div class="save-status"><span id="saveStatus" role="status">Завантажуємо дані…</span><button onclick="formaSync.retry()">Повторити збереження</button><button onclick="exportData()">Завантажити копію</button></div><nav id="nav" aria-label="Головна навігація"></nav><div id="view"></div><div class="footer">Особиста версія · Python + SQLite · Дані зберігаються на цьому комп’ютері. Синхронізація з iPhone ще не підключена.</div></main>
-<dialog id="picker"><div class="row"><h2>Додати вправу</h2><button class="subtle" onclick="picker.close()" aria-label="Закрити">✕</button></div><input id="search" placeholder="Знайти вправу…" aria-label="Пошук вправ" oninput="renderChoices()"><div id="choices"></div><hr style="border:0;border-top:1px solid #eee;margin:20px 0"><label for="custom">Своя вправа</label><div class="row"><input id="custom" placeholder="Назва вправи" maxlength="100"><button class="primary" onclick="addCustom()">Додати</button></div></dialog>
+<dialog id="picker"><div class="row"><h2>Додати вправу</h2><button class="subtle" onclick="picker.close()" aria-label="Закрити">✕</button></div><input id="search" placeholder="Знайти вправу…" aria-label="Пошук вправ" oninput="renderChoices()"><div id="choices"></div><button class="primary" style="width:100%;margin-top:16px" onclick="openCustomExercise(true)">＋ Створити власну вправу</button></dialog>
 <div id="notice" role="status" hidden></div>
 
 </body>

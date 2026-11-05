@@ -3,6 +3,8 @@ import json
 import math
 import re
 import sqlite3
+import base64
+import binascii
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -81,6 +83,29 @@ def validate_state(state):
         if value['id'] in ids:
             raise ValueError('Дубльована вправа каталогу')
         ids.add(value['id'])
+        if 'image_data_url' in value:
+            image = value['image_data_url']
+            if not isinstance(image, str) or len(image) > 400000:
+                raise ValueError('Некоректне зображення вправи')
+            match = re.fullmatch(r'data:image/(png|jpeg|webp);base64,([A-Za-z0-9+/]+=*)', image)
+            if not match:
+                raise ValueError('Підтримуються лише PNG, JPEG та WebP')
+            try:
+                payload = base64.b64decode(match[2], validate=True)
+            except (binascii.Error, ValueError) as error:
+                raise ValueError('Пошкоджене зображення') from error
+            signatures = {'png': payload.startswith(b'\x89PNG\r\n\x1a\n'), 'jpeg': payload.startswith(b'\xff\xd8\xff'), 'webp': payload.startswith(b'RIFF') and payload[8:12] == b'WEBP'}
+            if not signatures[match[1]]:
+                raise ValueError('Формат зображення не відповідає вмісту')
+        if value.get('is_custom') is True:
+            types = {'weight_reps','reps_only','bodyweight_weighted','duration','weight_duration','distance_duration','short_distance_weight'}
+            equipment = {'none','barbell','dumbbell','kettlebell','machine','plate','resistance_band','suspension','other'}
+            muscles = {'chest','lats','upper_back','lower_back','traps','shoulders','biceps','triceps','forearms','quadriceps','hamstrings','glutes','calves','abdominals','neck','abductors','adductors','full_body','cardio','other'}
+            if value.get('type') not in types or value.get('equipment') not in equipment or value.get('primary_muscle_group') not in muscles:
+                raise ValueError('Вкажіть тип, обладнання та головні м’язи власної вправи')
+            secondary = value.get('secondary_muscle_groups', [])
+            if not isinstance(secondary, list) or any(not isinstance(key, str) or key not in muscles or key == value['primary_muscle_group'] for key in secondary) or len(set(secondary)) != len(secondary):
+                raise ValueError('Некоректні другорядні м’язи')
     # Reject NaN and Infinity even inside optional metadata.
     json.dumps(state, allow_nan=False)
 

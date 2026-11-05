@@ -131,21 +131,7 @@ function deleteHistoryWorkout(workoutId) {
   toast('Тренування видалено з історії. Статистику оновлено.');
 }
 
-function progressView() {
-  const names = [...new Set(db.workouts.flatMap(workout => workout.exercises.filter(exercise => exercise.sets.some(set => set.done && set.kg > 0)).map(exercise => exercise.name)))];
-  const groups = groupExercisesByPrimary(names);
-  const records = groups.map(group => muscleGroupHTML(group, group.items.map(name => {
-    const best = Math.max(...db.workouts.flatMap(workout => workout.exercises.filter(exercise => exercise.name === name).flatMap(exercise => exercise.sets.filter(set => set.done).map(set => set.kg))));
-    return `<div class="row list-item record-row"><span class="record-name">${exerciseNameHTML(name)}${muscleDetailsHTML(name)}</span><strong class="record-values">${weightHTML(best)}</strong></div>`;
-  }).join(''), 'progress')).join('');
-  return `<div class="eyebrow">Сила в послідовності</div><h1>Особистий прогрес.</h1><p>Максимальна вага у виконаному підході та обсяг останніх тренувань.</p>
-    <div class="card"><h2>Ваші рекорди</h2><p class="muscle-source">Натисніть на групу, щоб розгорнути вправи. Кольором на схемі позначено основну ділянку. Схеми умовні; класифікація вправ — за даними Hevy.</p>
-      ${records || '<p>Рекорди з’являться після першого завершеного тренування.</p>'}
-    </div>
-    <div class="card"><h2>Обсяг тренувань</h2><p class="small">Сума ваги × повторення для виконаних підходів; вага тіла не враховується.</p>
-      ${db.workouts.slice(-8).map(workout => `<div class="list-item"><div class="row small"><span>${date(workout.started)} · ${esc(workout.name)}</span><strong>${weightHTML(volume(workout), true)}</strong></div><div class="bar" style="margin-top:10px"><i style="width:${volume(workout) / Math.max(1, ...db.workouts.slice(-8).map(volume)) * 100}%"></i></div></div>`).join('') || '<p>Ще немає даних.</p>'}
-    </div>`;
-}
+function progressView(){return exerciseProgressView();}
 function dataView(){return `<div class="eyebrow">Ваші дані</div><h1>Усе під контролем.</h1><div class="card"><h2>Дані з Hevy</h2><p>Імпортуйте повний файл forma-personal-data.json: тренування, підходи, програми та каталог вправ. Локальні записи зберігаються, повторний імпорт не створює дублікатів.</p><button class="primary" onclick="document.getElementById('hevyImport').click()">↑ Імпортувати всі дані Hevy</button><input id="hevyImport" type="file" hidden style="display:none" accept=".json,application/json" onchange="importHevy(this.files[0]);this.value='' "></div><div class="card"><h2>Резервна копія</h2><p>Завантажте свої тренування та програми у файл. Його можна імпортувати в цьому прототипі в іншому браузері. Це ручне перенесення даних.</p><div class="actions"><button class="primary" onclick="exportData()">↓ Завантажити копію</button><button onclick="document.getElementById('import').click()">↑ Імпортувати копію</button><input hidden id="import" type="file" accept="application/json,.json" onchange="importData(this.files[0]);this.value=''" style="display:none"></div></div><div class="card"><h2>Статус особистої версії</h2><p>Локальний кеш браузера: <strong>${storageOK?'доступне':'помилка — завантажте копію'}</strong>.<br>Дані зберігаються Python-сервером у SQLite на цьому комп’ютері. Статус збереження показано над меню. Синхронізацію з iPhone ще не підключено.</p></div>`}
 function exportData(){const url=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=`forma-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 async function importData(file){if(!file)return;try{if(file.size>10*1024*1024)throw Error();const data=JSON.parse(await file.text());if(data.source==='Hevy'&&Array.isArray(data.workouts)){mergeHevyData(data);render();toast('Усі дані Hevy імпортовано');return}if(!validDB(data))throw Error();if(!confirm('Замінити поточні дані вмістом резервної копії? Перед цим рекомендуємо завантажити поточну копію.'))return;db=data;save();render();toast('Резервну копію імпортовано')}catch(e){toast('Файл не є коректною резервною копією Форма. Дані не змінено.')}}

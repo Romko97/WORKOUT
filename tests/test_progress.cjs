@@ -1,0 +1,17 @@
+const fs=require('fs'),path=require('path'),vm=require('vm'),assert=require('assert');
+const make=(id,day,sets)=>({id,name:'Тренування '+id,started:new Date(2026,9,day,18).getTime(),exercises:[{name:'Row',sets}],finished:0});
+const set=(kg,reps,done=true)=>({kg,reps,done});
+const first=make('first',1,[set(10,20),set(15,10)]),second=make('second',10,[set(20,12),set(999,99,false)]),third=make('third',20,[set(20,15)]);
+const elements=new Map(),el=id=>{if(!elements.has(id))elements.set(id,{innerHTML:''});return elements.get(id)};
+let navigated,opened=false,focused=false;
+const c={db:{workouts:[third,first,second],custom:[],exerciseCatalog:[{name:'Unused'}]},esc:x=>String(x).replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])),fmt:n=>String(Math.round(n*10)/10),weightHTML:n=>n+' кг',document:{getElementById:el,querySelector:()=>({set open(v){opened=v},classList:{add(){}},scrollIntoView(){},querySelector:()=>({focus(){focused=true}})})},go:tab=>navigated=tab,toast(){}};
+vm.createContext(c);vm.runInContext(fs.readFileSync(path.join(__dirname,'../static/progress.js'),'utf8'),c);const run=s=>vm.runInContext(s,c);
+const points=run("exerciseTimeline('Row')");assert.deepEqual(Array.from(points,p=>p.workout.id),['first','second','third']);assert.equal(points[1].kg,20);assert.equal(points[1].reps,12);assert.equal(points[0].sets.length,2);
+assert.ok(run('progressExerciseNames()').includes('Unused'));assert.equal(run("exerciseTimeline('Unused').length"),0);
+c.points=points;const chart=run("exerciseProgressChart(points,'kg','Вага','кг')");assert.equal((chart.match(/role="button"/g)||[]).length,3);assert.equal((chart.match(/class="chart-point chart-record"/g)||[]).length,2);assert.ok(chart.includes('onkeydown='));
+run("selectedProgressExercise='Row';showProgressPoint('kg',1)");assert.ok(el('progress-point-kg').innerHTML.includes("openProgressWorkout('second')"));assert.ok(el('progress-point-kg').innerHTML.includes('Рекорд'));
+const tables=run('exerciseHistoryTables(points)');assert.ok(tables.indexOf('Тренування third')<tables.indexOf('Тренування first'));assert.ok(!tables.includes('999'));assert.ok(tables.includes('Рекорд повторень'));assert.ok(tables.includes('Новий рекорд ваги'));assert.equal((tables.match(/<tbody>/g)||[]).length,3);
+run("openProgressWorkout('second')");assert.equal(navigated,'history');assert.ok(opened&&focused);
+const original=JSON.stringify(c.db);run("showProgressPoint('kg',99);openProgressWorkout('missing')");assert.equal(JSON.stringify(c.db),original);
+c.db.workouts=[make('duration',1,[{kg:0,reps:0,done:true,durationSeconds:60}])];const empty=run("progressExerciseContent('Row')");assert.ok(empty.includes('Немає даних із додатковою вагою'));assert.ok(empty.includes('Немає даних про повторення'));assert.ok(run("exerciseHistoryTables(exerciseTimeline('Row'))").includes('60 с'));
+console.log('PASS: completed sets only, chronological series, per-session maxima, tied records, chart links, keyboard controls, per-set tables, exact workout navigation, duration-only and empty exercises, no data mutations.');

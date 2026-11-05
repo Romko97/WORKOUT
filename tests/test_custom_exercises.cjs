@@ -2,7 +2,7 @@ const fs=require('fs'),path=require('path'),vm=require('vm'),assert=require('ass
 const elements=new Map();const el=id=>{if(!elements.has(id))elements.set(id,{value:'',textContent:'',innerHTML:'',hidden:false,close(){},showModal(){}});return elements.get(id)};
 let fail=false,written=null;
 const c={crypto:crypto.webcrypto,Date,document:{getElementById:el,querySelectorAll:()=>[]},localStorage:{setItem(){}},formaSync:{load:async()=>({workouts:[],routines:[],active:null,custom:[],exerciseCatalog:[]}),save:state=>{if(fail)throw Error('cache');written=JSON.parse(JSON.stringify(state));}},setTimeout(){},clearTimeout(){},setInterval(){},navigator:{}};c.window=c;
-vm.createContext(c);for(const name of ['effects','localization','anatomy','muscles','custom-exercises','set-controls','app'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../static/'+name+'.js'),'utf8'),c);
+vm.createContext(c);for(const name of ['effects','localization','anatomy','muscles','custom-exercises','set-controls','date-editor','app'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../static/'+name+'.js'),'utf8'),c);
 const run=code=>vm.runInContext(code,c);
 (async()=>{
  await c.formaReady;

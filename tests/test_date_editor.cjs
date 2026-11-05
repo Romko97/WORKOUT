@@ -1,0 +1,18 @@
+const fs=require('fs'),path=require('path'),vm=require('vm'),assert=require('assert');
+const start=new Date(2024,1,29,15,45,12,123).getTime();
+const selected={id:'selected',name:'Моє тренування',started:start,finished:start+4500123,exercises:[{name:'Жим',sets:[{kg:50,reps:10,done:true}]}]};
+const earlier={...selected,id:'earlier',started:new Date(2020,5,1,14).getTime(),finished:new Date(2020,5,1,15).getTime()};
+const elements=new Map(),el=id=>{if(!elements.has(id))elements.set(id,{innerHTML:'',hidden:true,textContent:'',close(){},scrollIntoView(){}});return elements.get(id)};
+let fail=false,written=null;
+const c={Date,Number,Math,Map,db:{workouts:[selected,earlier],active:{id:'active'}},document:{getElementById:el},esc:x=>String(x).replace(/</g,'&lt;'),save:()=>{if(fail)return false;written=JSON.parse(JSON.stringify(c.db));return true},localStorage:{setItem(){}},render(){},toast(){},KEY:'test'};
+vm.createContext(c);vm.runInContext(fs.readFileSync(path.join(__dirname,'../static/date-editor.js'),'utf8'),c);const run=code=>vm.runInContext(code,c);
+assert.equal(run('daysInWorkoutMonth(2024,1)'),29);assert.equal(run('daysInWorkoutMonth(2023,1)'),28);
+c.source=selected;const changed=run('workoutOnDate(source,2025,10,5)');assert.equal(changed.finished-changed.started,selected.finished-selected.started);assert.equal(new Date(changed.started).getHours(),15);assert.equal(new Date(changed.started).getMilliseconds(),123);assert.equal(changed.id,selected.id);assert.deepEqual(changed.exercises,selected.exercises);
+assert.throws(()=>run('workoutOnDate(source,2025,1,29)'));assert.throws(()=>run('workoutOnDate(source,2025,12,1)'));
+run("workoutDateDraft={id:'selected',year:2024,month:1,day:29,mode:'year'};chooseWorkoutDatePart('year',2023)");assert.equal(run('workoutDateDraft.day'),28);
+run("workoutDateDraft={id:'selected',year:2024,month:0,day:31,mode:'month'};chooseWorkoutDatePart('month',1)");assert.equal(run('workoutDateDraft.day'),29);
+run("setWorkoutDateMode('month')");assert.ok(el('workoutDateDialog').innerHTML.includes('workout-month-grid'));
+run("setWorkoutDateMode('year')");const years=el('workoutDateDialog').innerHTML;assert.ok(years.indexOf('workout-year-2024')<years.indexOf('workout-year-2000'));
+const before=c.db.workouts;fail=true;run("workoutDateDraft={id:'selected',year:2019,month:0,day:5,mode:'day',returnMode:'day'};saveWorkoutDate()");assert.strictEqual(c.db.workouts,before);assert.equal(c.db.workouts[0].started,start);
+fail=false;run('saveWorkoutDate()');assert.equal(written.workouts[0].id,'selected');assert.equal(written.workouts[1].id,'earlier');assert.equal(written.workouts.length,2);assert.equal(written.active.id,'active');assert.equal(written.workouts[0].finished-written.workouts[0].started,4500123);
+console.log('PASS: leap years, month/year clamping, month grid, descending year list, original time/duration/data retained, chronological reordering, failed-save rollback.');

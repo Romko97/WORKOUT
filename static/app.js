@@ -54,7 +54,7 @@ function routineCard(r){return `<div class="card"><div class="row"><div><span cl
 function routines(){return `<div class="hero"><div><div class="eyebrow">Ваш план</div><h1>Програми тренувань.</h1><p>Збережені вправи та підходи для наступного візиту в зал.</p></div><button class="primary" onclick="start()">＋ Створити через тренування</button></div>${db.routines.length?db.routines.map(routineCard).join(''):'<div class="card empty"><h2>Поки що тут чистий аркуш</h2><p>Додайте вправи в тренуванні та натисніть «Зберегти програму».</p></div>'}`}
 function deleteRoutine(id){if(confirm('Видалити цю програму?')){db.routines=db.routines.filter(r=>r.id!==id);save();render()}}
 function history() {
-  const workouts = [...db.workouts].reverse();
+  const workouts = [...db.workouts].sort((a,b)=>b.started-a.started||a.id.localeCompare(b.id));
   const cards = workouts.map(workout => `
     <details class="card history-day" data-workout-id="${esc(workout.id)}">
       <summary class="history-summary">
@@ -63,9 +63,9 @@ function history() {
           <span class="muted history-summary-stats">${completed(workout)} підходів · ${weightHTML(volume(workout),true)} · ${Math.max(1, Math.round((workout.finished - workout.started) / 60000))} хв</span>
         </span>
         <time class="history-date-group" datetime="${new Date(workout.started).toISOString()}" aria-label="${esc(new Date(workout.started).toLocaleDateString('uk-UA', {day:'numeric',month:'long',year:'numeric'}))}">
-          <span class="history-date-part">${String(new Date(workout.started).getDate()).padStart(2, '0')}</span>
-          <span class="history-date-part">${String(new Date(workout.started).getMonth() + 1).padStart(2, '0')}</span>
-          <span class="history-date-part">${String(new Date(workout.started).getFullYear()).slice(-2)}</span>
+          <button type="button" class="history-date-part" data-date-workout="${esc(workout.id)}" data-date-mode="day" aria-label="Змінити день тренування ${esc(workout.name)}" onclick="openWorkoutDate(event,this)">${String(new Date(workout.started).getDate()).padStart(2,'0')}</button>
+          <button type="button" class="history-date-part" data-date-workout="${esc(workout.id)}" data-date-mode="month" aria-label="Змінити місяць тренування ${esc(workout.name)}" onclick="openWorkoutDate(event,this)">${String(new Date(workout.started).getMonth()+1).padStart(2,'0')}</button>
+          <button type="button" class="history-date-part" data-date-workout="${esc(workout.id)}" data-date-mode="year" aria-label="Змінити рік тренування ${esc(workout.name)}" onclick="openWorkoutDate(event,this)">${String(new Date(workout.started).getFullYear()).slice(-2)}</button>
         </time>
       </summary>
       <div class="history-day-toolbar"><span class="muted">${workout.exercises.length} вправ у тренуванні</span><button class="danger history-delete-day" onclick="deleteHistoryWorkout('${workout.id}')">Видалити тренування</button></div>

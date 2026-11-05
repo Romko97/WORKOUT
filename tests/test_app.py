@@ -120,6 +120,20 @@ class PersistenceTests(unittest.TestCase):
         with self.assertRaises(ValueError): self.database.write(state,0)
         self.assertEqual(self.database.read()['revision'],0)
 
+    def test_changed_workout_dates_reorder_and_persist(self):
+        state=example()
+        first={**copy.deepcopy(state['active']),'id':'first','started':1000,'finished':5000}
+        second={**copy.deepcopy(state['active']),'id':'second','started':2000,'finished':6000}
+        state['workouts']=[first,second]
+        self.database.write(state,0)
+        first['started']=3000
+        first['finished']=7000
+        self.database.write(state,1)
+        restored=Database(self.path).read()['state']
+        self.assertEqual([item['id'] for item in restored['workouts']],['second','first'])
+        self.assertEqual(restored['workouts'][1]['finished']-restored['workouts'][1]['started'],4000)
+        self.assertEqual(restored['active'],state['active'])
+
 
 class APITests(unittest.TestCase):
     def setUp(self):

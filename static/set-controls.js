@@ -16,7 +16,7 @@ function setValueControl(set, exerciseIndex, setIndex, key, label) {
 }
 
 function changeSetValue(exerciseIndex,setIndex,key,direction) {
-  if(!['kg','reps','durationSeconds','distanceMeters'].includes(key)||![1,-1].includes(direction))return;
+  if(!['kg','reps','durationSeconds','distanceMeters','floors','steps'].includes(key)||![1,-1].includes(direction))return;
   const set=db.active?.exercises[exerciseIndex]?.sets[setIndex];
   if(!set)return;
   const input=document.getElementById(`value-${set.id}-${key}`);

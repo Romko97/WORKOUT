@@ -39,7 +39,7 @@ function addExercise(name){
  const record=db.exerciseCatalog?.find(e=>e.name===name);
  const last=[...db.workouts].reverse().flatMap(w=>w.exercises).find(e=>e.name===name);
  const type=record?.type||last?.trackingType||'weight_reps';
- const timed=['duration','weight_duration','distance_duration'].includes(type);
+ const timed=['duration','weight_duration','distance_duration','floors_duration','steps_duration'].includes(type);
  const distance=type==='short_distance_weight';
  const sets=last?.sets.some(s=>s.done)?last.sets.filter(s=>s.done).map(s=>({...s,id:uid(),done:false})):Array.from({length:3},()=>({id:uid(),kg:0,reps:timed||distance?0:10,durationSeconds:timed?60:0,distanceMeters:0,done:false}));
  db.active.exercises.push({name,exerciseId:record?.id,trackingType:type,sets});
@@ -178,16 +178,16 @@ function mergeHevyData(data){
  return {workouts:incoming.workouts.length,routines:incoming.routines.length};
 }
 async function importHevy(file){if(!file)return;try{if(file.size>10*1024*1024)throw Error();const result=mergeHevyData(JSON.parse(await file.text()));render();toast(`Hevy: ${result.workouts} тренувань і ${result.routines} програм імпортовано.`)}catch(e){toast('Не вдалося імпортувати Hevy. Перевірте файл і доступність збереження. Поточні дані не змінено.')}}
-function setSummary(s,e,html=false){const type=e.trackingType||'weight_reps',parts=[],weight=html?weightHTML:weightText;if(s.durationSeconds)parts.push(`${fmt(s.durationSeconds)} с`);if(s.distanceMeters)parts.push(`${fmt(s.distanceMeters)} м`);if(s.reps)parts.push((['reps_only','bodyweight_weighted','bodyweight_assisted','bodyweight_reps','bodyweight_assisted_reps'].includes(type)&&!s.kg)?`${s.reps} повторень`:`${weight(s.kg)} × ${s.reps}`);else if(s.kg)parts.push(weight(s.kg));return parts.join(' · ')||'Виконано'}
+function setSummary(s,e,html=false){const type=e.trackingType||'weight_reps',parts=[],weight=html?weightHTML:weightText;if(s.floors)parts.push(`${fmt(s.floors)} поверхів`);if(s.steps)parts.push(`${fmt(s.steps)} кроків`);if(s.durationSeconds)parts.push(`${fmt(s.durationSeconds)} с`);if(s.distanceMeters)parts.push(`${fmt(s.distanceMeters)} м`);if(s.reps)parts.push((['reps_only','bodyweight_weighted','bodyweight_assisted','bodyweight_reps','bodyweight_assisted_reps'].includes(type)&&!s.kg)?`${s.reps} повторень`:`${weight(s.kg)} × ${s.reps}`);else if(s.kg)parts.push(weight(s.kg));return parts.join(' · ')||'Виконано'}
 function renderActiveSet(s,j,i,e){
- const type=e.trackingType||'weight_reps',timed=['duration','weight_duration','distance_duration'].includes(type),distance=['distance_duration','short_distance_weight'].includes(type);
- const firstKey=type==='reps_only'?'reps':type==='duration'?'durationSeconds':type==='distance_duration'?'distanceMeters':'kg';
+ const type=e.trackingType||'weight_reps',timed=['duration','weight_duration','distance_duration','floors_duration','steps_duration'].includes(type),distance=['distance_duration','short_distance_weight'].includes(type);
+ const firstKey=type==='floors_duration'?'floors':type==='steps_duration'?'steps':type==='reps_only'?'reps':type==='duration'?'durationSeconds':type==='distance_duration'?'distanceMeters':'kg';
  const secondKey=['duration','reps_only'].includes(type)?null:timed?'durationSeconds':distance?'distanceMeters':'reps';
- const labels={kg:'Вага, кг',reps:'Повторення',durationSeconds:'Тривалість, с',distanceMeters:'Відстань, м'};
+ const labels={floors:'Поверхи',steps:'Кроки',kg:type==='bodyweight_assisted'?'Допомога, кг':'Вага, кг',reps:'Повторення',durationSeconds:'Тривалість, с',distanceMeters:'Відстань, м'};
  const input=key=>setValueControl(s,i,j,key,labels[key]);
  return `<div id="set-${esc(s.id)}" class="set ${s.done?'done':''}"><span class="muted">${j+1}</span>${input(firstKey)}${input(secondKey)}<button class="check" aria-label="Позначити підхід ${j+1}" aria-pressed="${s.done}" onclick="toggle(${i},${j})">${s.done?'✓':'○'}</button><button class="subtle" style="padding:4px" onclick="removeSet(${i},${j})" aria-label="Видалити підхід ${j+1}">×</button></div>`;
 }
-function setColumnLabels(e){const t=e.trackingType||'weight_reps';return t==='reps_only'?['Повтори','']:t==='bodyweight_weighted'?['Додаткова вага, кг','Повтори']:t==='duration'?['Секунди','']:t==='distance_duration'?['Метри','Секунди']:t==='weight_duration'?['Кг','Секунди']:t==='short_distance_weight'?['Кг','Метри']:['Кг','Повтори']}
+function setColumnLabels(e){const t=e.trackingType||'weight_reps';return t==='floors_duration'?['Поверхи','Секунди']:t==='steps_duration'?['Кроки','Секунди']:t==='bodyweight_assisted'?['Допомога, кг','Повтори']:t==='reps_only'?['Повтори','']:t==='bodyweight_weighted'?['Додаткова вага, кг','Повтори']:t==='duration'?['Секунди','']:t==='distance_duration'?['Метри','Секунди']:t==='weight_duration'?['Кг','Секунди']:t==='short_distance_weight'?['Кг','Метри']:['Кг','Повтори']}
 function applyPersonalSeed(){const element=document.getElementById('hevyPersonalSeed');if(!element?.textContent)return;try{const data=JSON.parse(element.textContent),version=data.exported_at;if(db.hevySeedVersion===version)return;mergeHevyData(data);db.hevySeedVersion=version;save()}catch(e){toast('Автоматичний імпорт Hevy не завершено. Спробуйте імпорт у вкладці «Дані».')}}
 
 window.formaReady = (async () => {

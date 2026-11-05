@@ -26,6 +26,10 @@ const run=code=>vm.runInContext(code,c);
  el('value-control-set-reps').value='10000';run("changeSetValue(0,0,'reps',1)");assert.equal(run('db.active.exercises[0].sets[0].reps'),10000);
  el('value-control-set-kg').value='2000';run("changeSetValue(0,0,'kg',1)");assert.equal(run('db.active.exercises[0].sets[0].kg'),2000);
  assert.ok(run("renderActiveSet(db.active.exercises[0].sets[0],0,0,db.active.exercises[0])").includes('number-stepper'));
+ for(const [type,key,label] of [['floors_duration','floors','Поверхи'],['steps_duration','steps','Кроки']]){
+  const rendered=run(`renderActiveSet({id:'stairs',kg:0,reps:0,done:false,${key}:10,durationSeconds:60},0,0,{trackingType:'${type}'})`);assert.ok(rendered.includes(label));assert.ok(rendered.includes('durationSeconds'));assert.ok(rendered.includes(key));
+ }
+ assert.ok(run("setColumnLabels({trackingType:'bodyweight_assisted'})")[0].includes('Допомога'));
  console.log('PASS: form validation, duplicate names, muscle grouping, rollback on save failure, all seven exercise types, safe image formats and horizontal control bounds.');
 })().catch(e=>{console.error(e);process.exitCode=1});
 

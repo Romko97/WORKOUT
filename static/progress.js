@@ -24,9 +24,10 @@ function exerciseProgressView(){
   }).join(''),'records')).join('')||'<p>Ще немає виконаних підходів із вагою або повтореннями.</p>';
   const recent=[...db.workouts].sort((a,b)=>b.started-a.started).slice(0,8),maxVolume=Math.max(1,...recent.map(volume));
   const volumes='<p class="small">Останні 8 тренувань. Сума ваги × повторення виконаних підходів; вага тіла не враховується.</p>'+recent.map(w=>`<div class="list-item"><div class="row small"><span>${progressDate(w.started)} · ${esc(w.name)}</span><strong>${weightHTML(volume(w),true)}</strong></div><div class="bar"><i style="width:${volume(w)/maxVolume*100}%"></i></div></div>`).join('');
+  const performed=performedExerciseNames();
   const explorer=groups.map(group=>muscleGroupHTML(group,group.items.map(name=>{
     const index=names.indexOf(name),selected=selectedProgressExercise===name;
-    return `<div class="progress-exercise"><button type="button" class="progress-exercise-button" data-progress-name="${esc(name)}" aria-expanded="${selected}" aria-controls="exercise-progress-${index}" onclick="selectProgressExercise(this)"><span>${exerciseNameHTML(name)}</span><span aria-hidden="true">⌄</span></button><div id="exercise-progress-${index}" ${selected?'':'hidden'}>${selected?progressExerciseContent(name):''}</div></div>`;
+    return `<div class="progress-exercise"><button type="button" class="progress-exercise-button ${performed.has(name)?'exercise-performed':''}" data-progress-name="${esc(name)}" aria-expanded="${selected}" aria-controls="exercise-progress-${index}" onclick="selectProgressExercise(this)"><span>${exerciseNameHTML(name)}</span><span aria-hidden="true">⌄</span></button><div id="exercise-progress-${index}" ${selected?'':'hidden'}>${selected?progressExerciseContent(name):''}</div></div>`;
   }).join(''),'exercise-progress')).join('')||'<p>Додайте вправу або імпортуйте тренування.</p>';
   return `<div class="eyebrow">Сила в послідовності</div><h1>Особистий прогрес.</h1><p>Рекорди, зміни результатів і всі підходи кожної вправи.</p>${progressSection('records','Рекорди',records)}${progressSection('volume','Обсяг тренувань',recent.length?volumes:'<p>Ще немає тренувань.</p>')}${progressSection('explorer','Прогрес','<p class="small">Виберіть групу м’язів, а потім вправу.</p>'+explorer)}`;
 }
